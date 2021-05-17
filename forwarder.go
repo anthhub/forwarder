@@ -18,21 +18,16 @@ import (
 	"k8s.io/client-go/transport/spdy"
 )
 
+var once sync.Once
+
 type portForwardAPodRequest struct {
-	// RestConfig is the kubernetes config
-	RestConfig *rest.Config
-	// Pod is the selected pod for this port forwarding
-	Pod v1.Pod
-	// LocalPort is the local port that will be selected to expose the PodPort
-	LocalPort int
-	// PodPort is the target port for the pod
-	PodPort int
-	// Steams configures where to write or read input from
-	Streams genericclioptions.IOStreams
-	// StopCh is the channel used to manage the port forward lifecycle
-	StopCh <-chan struct{}
-	// ReadyCh communicates when the tunnel is ready to receive traffic
-	ReadyCh chan struct{}
+	RestConfig *rest.Config                // RestConfig is the kubernetes config
+	Pod        v1.Pod                      // Pod is the selected pod for this port forwarding
+	LocalPort  int                         // LocalPort is the local port that will be selected to expose the PodPort
+	PodPort    int                         // PodPort is the target port for the pod
+	Streams    genericclioptions.IOStreams // Steams configures where to write or read input from
+	StopCh     <-chan struct{}             // StopCh is the channel used to manage the port forward lifecycle
+	ReadyCh    chan struct{}               // ReadyCh communicates when the tunnel is ready to receive traffic
 }
 
 type signal struct {
@@ -41,19 +36,18 @@ type signal struct {
 }
 
 type Option struct {
-	LocalPort int
-	PodPort   int
-	Pod       v1.Pod
+	LocalPort int    // the local port for forwarding
+	PodPort   int    // the k8s pod port
+	Pod       v1.Pod // the k8s pod metadata
 }
 
 type Result struct {
-	Close func()
-	Ready func()
-	Wait  func() error
+	Close func()       // close the port forwarding
+	Ready func()       // block till the forwarding ready
+	Wait  func() error // block and listen IOStreams close signal
 }
 
-var once sync.Once
-
+// It is to forward port for k8s cloud services.
 func WithForwarders(ctx context.Context, options []*Option, kubeconfig string) (*Result, error) {
 
 	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
