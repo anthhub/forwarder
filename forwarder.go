@@ -193,7 +193,7 @@ func handleOptions(ctx context.Context, options []*Option, config *restclient.Co
 			podName := option.Pod.ObjectMeta.Name
 
 			if podName != "" {
-				namespace := option.Service.ObjectMeta.Namespace
+				namespace := option.Pod.ObjectMeta.Namespace
 				if namespace == "" {
 					namespace = "default"
 				}
@@ -202,7 +202,7 @@ func handleOptions(ctx context.Context, options []*Option, config *restclient.Co
 					return err
 				}
 				if pod == nil {
-					return fmt.Errorf("no such pod: %s", podName)
+					return fmt.Errorf("no such pod: %v", podName)
 				}
 
 				newOptions[index] = option
@@ -223,7 +223,7 @@ func handleOptions(ctx context.Context, options []*Option, config *restclient.Co
 				return err
 			}
 			if svc == nil {
-				return fmt.Errorf("no such service: %s", svcName)
+				return fmt.Errorf("no such service: %v", svcName)
 			}
 			labels := []string{}
 			for key, val := range svc.Spec.Selector {

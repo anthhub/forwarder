@@ -13,7 +13,12 @@ go get github.com/anthhub/forwarder
 ## Usage
 
 ```go
-	options := []*Option{
+
+	import (
+		"github.com/anthhub/forwarder"
+	)
+
+	options := []*forwarder.Option{
 		{
 			// the local port for forwarding
 			LocalPort: 8080,
@@ -28,33 +33,37 @@ go get github.com/anthhub/forwarder
 			},
 		},
 		{
-			LocalPort: 8081,
+			// if local port isn't provided, forwarder will generate a random port number
+			// LocalPort: 8081,
 			PodPort:   80,
-			Pod: v1.Pod{
+			// the k8s service metadata, it's to forward service
+			Service: v1.Service{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "nginx-deployment-66b6c48dd5-n86z4",
-					Namespace: "default",
+					Name: "my-nginx-svc",
+					// the namespace default is "default"
+					// Namespace: "default",
 				},
 			},
 		},
 	}
 
-	// create a forwarder
-	ret, err := WithForwarders(context.Background(), options, *kubecfg)
+	// it's to create a forwarder, and you need provide a path of kubeconfig
+	ret, err := forwarder.WithForwarders(context.Background(), options, "./kubecfg")
 	if err != nil {
 		panic(err)
 	}
 	// remember to close the forwarding
 	defer ret.Close()
-	// wait the ready of forwarding
-	ret.Ready()
+	// wait forwarding ready
+	// the remote and local ports are listed
+	ports, err := ret.Ready()
+	if err != nil {
+		panic(err)
+	}
 	// ...
 
 	// if you want to block the goroutine and listen IOStreams close signal, you can do as following:
-	// 
-	// if err := ret.Wait(); err != nil {
-	// 	panic(err)
-	// }
+	ret.Wait()
 ```
 
 > If you want to learn more about `forwarder`, you can read test cases and source code.
