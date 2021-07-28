@@ -16,12 +16,12 @@ func TestBasic(t *testing.T) {
 
 	options := []*Option{
 		{
-			LocalPort: 8080,
-			PodPort:   80,
-			Pod: v1.Pod{
+			// LocalPort: 8080,
+			PodPort: 80,
+			Service: v1.Service{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "nginx-deployment-66b6c48dd5-5pkwm",
-					Namespace: "default",
+					Name: "my-nginx-svc",
+					// Namespace: "default",
 				},
 			},
 		},
@@ -30,8 +30,8 @@ func TestBasic(t *testing.T) {
 			PodPort:   80,
 			Pod: v1.Pod{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "nginx-deployment-66b6c48dd5-n86z4",
-					Namespace: "default",
+					Name: "my-nginx-66b6c48dd5-ttdb2",
+					// Namespace: "default",
 				},
 			},
 		},
@@ -43,8 +43,6 @@ func TestBasic(t *testing.T) {
 	}
 	defer ret.Close()
 	ret.Ready()
-	if err := ret.Wait(); err != nil {
-		panic(err)
-	}
+	ret.Wait()
 
 }
