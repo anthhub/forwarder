@@ -7,8 +7,6 @@ import (
 	"testing"
 
 	"github.com/namsral/flag"
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func TestBasic(t *testing.T) {
@@ -21,28 +19,18 @@ func TestBasic(t *testing.T) {
 
 	`)
 	flag.Parse()
-	fmt.Printf("kubecfg: %v", kubecfg)
+	fmt.Printf("kubecfg: %v\n", kubecfg)
 
 	options := []*Option{
 		{
-			// LocalPort: 8080,
-			PodPort: 80,
-			Service: v1.Service{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: "my-nginx-svc",
-					// Namespace: "default",
-				},
-			},
+			LocalPort:   8080,
+			RemotePort:  80,
+			ServiceName: "my-nginx-svc",
 		},
 		{
-			LocalPort: 8081,
-			PodPort:   80,
-			Pod: v1.Pod{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: "my-nginx-66b6c48dd5-ttdb2",
-					// Namespace: "default",
-				},
-			},
+			// LocalPort: 8081,
+			// RemotePort:   80,
+			Source: "po/my-nginx-66b6c48dd5-ttdb2",
 		},
 	}
 

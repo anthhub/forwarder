@@ -8,10 +8,8 @@ import (
 
 	"github.com/anthhub/forwarder"
 	"github.com/gin-gonic/gin"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/namsral/flag"
-	v1 "k8s.io/api/core/v1"
 )
 
 func setupRouter() *gin.Engine {
@@ -38,30 +36,14 @@ func main() {
 
 	options := []*forwarder.Option{
 		{
-			// the local port for forwarding
-			LocalPort: 8080,
-			// the k8s pod port
-			PodPort: 80,
-			// the k8s pod metadata
-			Pod: v1.Pod{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "my-nginx-66b6c48dd5-ttdb2",
-					Namespace: "default",
-				},
-			},
+			LocalPort:   8080,
+			RemotePort:  80,
+			ServiceName: "my-nginx-svc",
 		},
 		{
-			// if local port isn't provided, forwarder will generate a random port number
 			// LocalPort: 8081,
-			PodPort: 80,
-			// the k8s service metadata, it's to forward service
-			Service: v1.Service{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: "my-nginx-svc",
-					// the namespace default is "default"
-					// Namespace: "default",
-				},
-			},
+			// RemotePort:   80,
+			Source: "po/my-nginx-66b6c48dd5-ttdb2",
 		},
 	}
 

@@ -21,33 +21,29 @@ go get github.com/anthhub/forwarder
 	options := []*forwarder.Option{
 		{
 			// the local port for forwarding
-			LocalPort: 8080,
+			LocalPort: 	8080,
 			// the k8s pod port
-			PodPort:   80,
-			// the k8s pod metadata
-			Pod: v1.Pod{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "nginx-deployment-66b6c48dd5-5pkwm",
-					Namespace: "default",
-				},
-			},
+			RemotePort: 80,
+			// the forwarding service name
+			ServiceName: "my-nginx-svc",
+			// the k8s source string, eg: svc/my-nginx-svc po/my-nginx-666
+			// the Source field will be parsed and override ServiceName or RemotePort field
+			Source: "svc/my-nginx-66b6c48dd5-ttdb2",
+			// namespace default is "default"
+			Namespace: "default"
 		},
-		{
+		{	
 			// if local port isn't provided, forwarder will generate a random port number
 			// LocalPort: 8081,
-			PodPort:   80,
-			// the k8s service metadata, it's to forward service
-			Service: v1.Service{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: "my-nginx-svc",
-					// the namespace default is "default"
-					// Namespace: "default",
-				},
-			},
+			// 
+			// if target port isn't provided, forwarder find the first container port of the pod or service
+			// RemotePort: 80,
+			Source: "po/my-nginx-66b6c48dd5-ttdb2",
 		},
 	}
 
 	// it's to create a forwarder, and you need provide a path of kubeconfig
+	// the path of kubeconfig, default is "~/.kube/config"
 	ret, err := forwarder.WithForwarders(context.Background(), options, "./kubecfg")
 	if err != nil {
 		panic(err)
