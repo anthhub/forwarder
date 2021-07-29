@@ -58,7 +58,7 @@ type Result struct {
 // It is to forward port for k8s cloud services.
 func WithForwarders(ctx context.Context, options []*Option, kubeconfig string) (*Result, error) {
 	if kubeconfig == "" {
-		kubeconfig = "./kubeconfig"
+		kubeconfig = "~/.kube/config"
 	}
 
 	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)

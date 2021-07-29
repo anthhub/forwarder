@@ -2,17 +2,26 @@ package forwarder
 
 import (
 	"context"
-	"flag"
+
+	"fmt"
 	"testing"
 
+	"github.com/namsral/flag"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-var kubecfg = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
-
 func TestBasic(t *testing.T) {
+	var kubecfg string
+	flag.StringVar(&kubecfg, "kubeconfig", "./kubeconfig", `
+
+	the path of kubeconfig, default is '~/.kube/config'
+	you can configure kubeconfig by environment variable: KUBECONFIG=./kubeconfig, 
+	or provide a option: --kubeconfig=./kubeconfig
+
+	`)
 	flag.Parse()
+	fmt.Printf("kubecfg: %v", kubecfg)
 
 	options := []*Option{
 		{
@@ -37,12 +46,16 @@ func TestBasic(t *testing.T) {
 		},
 	}
 
-	ret, err := WithForwarders(context.Background(), options, *kubecfg)
+	ret, err := WithForwarders(context.Background(), options, kubecfg)
 	if err != nil {
 		panic(err)
 	}
 	defer ret.Close()
-	ret.Ready()
+	ports, err := ret.Ready()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("ports: %+v\n", ports)
 	ret.Wait()
 
 }
