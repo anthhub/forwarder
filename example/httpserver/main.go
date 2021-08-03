@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-
+	_ "embed"
 	"fmt"
 	"net/http"
 
@@ -52,6 +52,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
 	// remember to close the forwarding
 	defer ret.Close()
 	// wait forwarding ready

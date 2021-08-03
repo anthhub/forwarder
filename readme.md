@@ -12,6 +12,8 @@ go get github.com/anthhub/forwarder
 
 ## Usage
 
+### forwarding by kubeconfig path
+
 ```go
 
 	import (
@@ -60,6 +62,40 @@ go get github.com/anthhub/forwarder
 
 	// if you want to block the goroutine and listen IOStreams close signal, you can do as following:
 	ret.Wait()
+```
+
+### forwarding embed kubeconfig
+```go
+//go:embed kubeconfig
+var kubeconfigBytes []byte
+
+func main() {
+	options := []*forwarder.Option{
+		{
+			// LocalPort: 8080,
+			// RemotePort:  80,
+			ServiceName: "my-nginx-svc",
+		},
+	}
+	// use kubeconfig bytes to config forward
+	ret, err := forwarder.WithForwardersEmbedConfig(context.Background(), options, kubeconfigBytes)
+	if err != nil {
+		panic(err)
+	}
+	// remember to close the forwarding
+	defer ret.Close()
+	// wait forwarding ready
+	// the remote and local ports are listed
+	ports, err := ret.Ready()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("ports: %+v\n", ports)
+	// ...
+
+	// if you want to block the goroutine and listen IOStreams close signal, you can do as following:
+	ret.Wait()
+}
 ```
 
 > If you want to learn more about `forwarder`, you can read example, test cases and source code.

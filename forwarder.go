@@ -12,26 +12,50 @@ import (
 	"syscall"
 
 	"golang.org/x/sync/errgroup"
-
 	"k8s.io/cli-runtime/pkg/genericclioptions"
-	"k8s.io/client-go/tools/clientcmd"
+	restclient "k8s.io/client-go/rest"
+	clientcmd "k8s.io/client-go/tools/clientcmd"
+	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 	"k8s.io/client-go/tools/portforward"
 	"k8s.io/client-go/transport/spdy"
 )
 
 var once sync.Once
 
-// It is to forward port for k8s cloud services.
-func WithForwarders(ctx context.Context, options []*Option, kubeconfig string) (*Result, error) {
-	if kubeconfig == "" {
-		kubeconfig = "~/.kube/config"
-	}
+// It is to forward port whith kubeconfig bytes.
+func WithForwardersEmbedConfig(ctx context.Context, options []*Option, kubeconfigBytes []byte) (*Result, error) {
+	kubeconfigGetter := func() (*clientcmdapi.Config, error) {
+		config, err := shimLoadConfig(kubeconfigBytes)
+		if err != nil {
+			return nil, err
+		}
 
-	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+		return config, nil
+	}
+	config, err := clientcmd.BuildConfigFromKubeconfigGetter("", kubeconfigGetter)
 	if err != nil {
 		return nil, err
 	}
 
+	return forwarders(ctx, options, config)
+}
+
+// It is to forward port for k8s cloud services.
+func WithForwarders(ctx context.Context, options []*Option, kubeconfigPath string) (*Result, error) {
+	if kubeconfigPath == "" {
+		kubeconfigPath = "~/.kube/config"
+	}
+
+	config, err := clientcmd.BuildConfigFromFlags("", kubeconfigPath)
+	if err != nil {
+		return nil, err
+	}
+
+	return forwarders(ctx, options, config)
+}
+
+// It is to forward port for k8s cloud services.
+func forwarders(ctx context.Context, options []*Option, config *restclient.Config) (*Result, error) {
 	newOptions, err := parseOptions(options)
 	if err != nil {
 		return nil, err
@@ -118,6 +142,7 @@ func WithForwarders(ctx context.Context, options []*Option, kubeconfig string) (
 	return ret, nil
 }
 
+// It is to forward port, and return the forwarder.
 func portForwardAPod(req *portForwardAPodRequest) (*portforward.PortForwarder, error) {
 	path := fmt.Sprintf("/api/v1/namespaces/%s/pods/%s/portforward",
 		req.Pod.Namespace, req.Pod.Name)
@@ -141,4 +166,35 @@ func portForwardAPod(req *portForwardAPodRequest) (*portforward.PortForwarder, e
 	}()
 
 	return fw, nil
+}
+
+// It is to transform kubeconfig bytes to clientcmdapi config.
+func shimLoadConfig(kubeconfigBytes []byte) (*clientcmdapi.Config, error) {
+	config, err := clientcmd.Load(kubeconfigBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	// set LocationOfOrigin on every Cluster, User, and Context
+	for key, obj := range config.AuthInfos {
+		config.AuthInfos[key] = obj
+	}
+	for key, obj := range config.Clusters {
+		config.Clusters[key] = obj
+	}
+	for key, obj := range config.Contexts {
+		config.Contexts[key] = obj
+	}
+
+	if config.AuthInfos == nil {
+		config.AuthInfos = map[string]*clientcmdapi.AuthInfo{}
+	}
+	if config.Clusters == nil {
+		config.Clusters = map[string]*clientcmdapi.Cluster{}
+	}
+	if config.Contexts == nil {
+		config.Contexts = map[string]*clientcmdapi.Context{}
+	}
+
+	return config, nil
 }
