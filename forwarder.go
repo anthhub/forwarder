@@ -54,6 +54,11 @@ func WithForwarders(ctx context.Context, options []*Option, kubeconfigPath strin
 	return forwarders(ctx, options, config)
 }
 
+// It is to forward port with restclient.Config.
+func WithRestConfig(ctx context.Context, options []*Option, config *restclient.Config) (*Result, error) {
+	return forwarders(ctx, options, config)
+}
+
 // It is to forward port for k8s cloud services.
 func forwarders(ctx context.Context, options []*Option, config *restclient.Config) (*Result, error) {
 	newOptions, err := parseOptions(options)
