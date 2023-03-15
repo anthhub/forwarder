@@ -41,9 +41,12 @@ func WithForwardersEmbedConfig(ctx context.Context, options []*Option, kubeconfi
 }
 
 // It is to forward port for k8s cloud services.
+// If `kubeconfigPath` is empty, the default kubeconfig location is used (e.g. `~/.kube/config`)
 func WithForwarders(ctx context.Context, options []*Option, kubeconfigPath string) (*Result, error) {
 	if kubeconfigPath == "" {
-		kubeconfigPath = "~/.kube/config"
+		home, _ := os.UserHomeDir()
+
+		kubeconfigPath = path.Join(home, ".kube", "config")
 	}
 
 	config, err := clientcmd.BuildConfigFromFlags("", kubeconfigPath)
