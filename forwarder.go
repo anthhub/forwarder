@@ -3,6 +3,7 @@ package forwarder
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -169,6 +170,15 @@ func portForwardAPod(req *portForwardAPodRequest) (*portforward.PortForwarder, e
 	transport, upgrader, err := spdy.RoundTripperFor(req.RestConfig)
 	if err != nil {
 		return nil, err
+	}
+
+	if req.LocalPort == 0 {
+		listener, err := net.Listen("tcp", "127.0.0.1:0")
+		if err != nil {
+			return nil, err
+		}
+		defer listener.Close()
+		req.LocalPort = listener.Addr().(*net.TCPAddr).Port
 	}
 
 	dialer := spdy.NewDialer(upgrader, &http.Client{Transport: transport}, http.MethodPost, targetURL)
